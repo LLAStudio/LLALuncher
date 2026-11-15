@@ -6,6 +6,7 @@ const UPDATE_CACHE_KEY = 'llastudio.updateCache.v1';
 export const defaultSettings: SettingsState = {
   githubToken: '',
   autoCheckMinutes: 30,
+  checkLauncherUpdates: true,
 };
 
 export function loadSettings(): SettingsState {
@@ -17,6 +18,10 @@ export function loadSettings(): SettingsState {
       ...defaultSettings,
       ...parsed,
       autoCheckMinutes: Math.max(5, Number(parsed.autoCheckMinutes ?? 30) || 30),
+      checkLauncherUpdates:
+        typeof parsed.checkLauncherUpdates === 'boolean'
+          ? parsed.checkLauncherUpdates
+          : defaultSettings.checkLauncherUpdates,
     };
   } catch {
     return defaultSettings;

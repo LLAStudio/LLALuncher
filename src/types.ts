@@ -73,4 +73,5 @@ export type ViewMode = 'grid' | 'list';
 export interface SettingsState {
   githubToken: string;
   autoCheckMinutes: number;
+  checkLauncherUpdates: boolean;
 }

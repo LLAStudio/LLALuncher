@@ -11,6 +11,7 @@ interface Props {
 export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) => {
   const [token, setToken] = useState(settings.githubToken);
   const [minutes, setMinutes] = useState(settings.autoCheckMinutes);
+  const [checkLauncherUpdates, setCheckLauncherUpdates] = useState(settings.checkLauncherUpdates);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
@@ -45,11 +46,32 @@ export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) =>
               <span className="text-sm text-muted">minutes (min. 5)</span>
             </div>
           </div>
+          <div className="rounded-md border border-border bg-[#0F1115] p-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={checkLauncherUpdates}
+                onChange={(e) => setCheckLauncherUpdates(e.target.checked)}
+                className="mt-1 accent-[#39FF14]"
+              />
+              <div>
+                <div className="text-sm font-medium">Vérifier les mises à jour du launcher au démarrage</div>
+                <p className="text-xs text-muted mt-1">Affiche un message si une nouvelle release de LLAStudio Launcher est disponible sur GitHub.</p>
+              </div>
+            </label>
+          </div>
         </div>
         <div className="px-5 py-4 border-t border-border flex justify-end gap-2 bg-[#101319]">
           <button onClick={onClose} className="px-3 py-2 rounded-md border border-border hover:bg-[#1A1F27] text-sm">Annuler</button>
           <button
-            onClick={() => onSave({ ...settings, githubToken: token.trim(), autoCheckMinutes: Math.max(5, minutes) })}
+            onClick={() =>
+              onSave({
+                ...settings,
+                githubToken: token.trim(),
+                autoCheckMinutes: Math.max(5, minutes),
+                checkLauncherUpdates,
+              })
+            }
             className="px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm inline-flex items-center gap-2 hover:brightness-110"
           >
             <Save size={15} /> Enregistrer
