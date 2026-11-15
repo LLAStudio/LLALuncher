@@ -5,9 +5,25 @@ import { AppCard } from './components/AppCard';
 import { AppDetailsModal } from './components/AppDetailsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { CATALOG_APPS } from './data/catalog';
-import type { AppInstallState, AppRuntimeState, NavSection, SettingsState, SortMode, ViewMode } from './types';
+import { APP_VERSION, LAUNCHER_REPO } from './constants';
+import type {
+  AppInstallState,
+  AppRuntimeState,
+  CatalogApp,
+  NavSection,
+  RemoteReleaseInfo,
+  SettingsState,
+  SortMode,
+  ViewMode,
+} from './types';
 import { loadSettings, saveSettings, loadUpdateCache, formatRelativeTime } from './services/storage';
-import { checkAppUpdate, getLastCheckedAt, isUpdateAvailable, pickBestAsset } from './services/githubUpdater';
+import {
+  checkAppUpdate,
+  fetchRemoteReleaseInfo,
+  getLastCheckedAt,
+  isUpdateAvailable,
+  pickBestAsset,
+} from './services/githubUpdater';
 import {
   downloadAndInstall,
   getAllInstallStates,
@@ -44,6 +60,8 @@ export default function App() {
   const [downloads, setDownloads] = useState<Record<string, { inProgress: boolean; percent?: number; targetVersion?: string }>>({});
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [globalChecking, setGlobalChecking] = useState(false);
+  const [launcherUpdate, setLauncherUpdate] = useState<RemoteReleaseInfo | null>(null);
+  const [launcherUpdateDismissed, setLauncherUpdateDismissed] = useState(false);
 
   const refreshInstalls = useCallback(async () => {
     try {
@@ -117,11 +135,44 @@ export default function App() {
     }
   }, [settings.githubToken]);
 
-  // Startup check
+  // Startup check (catalog apps)
   useEffect(() => {
     runCheckAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Startup self-update check for the launcher itself
+  useEffect(() => {
+    if (!settings.checkLauncherUpdates) return;
+    let cancelled = false;
+    const launcherApp: CatalogApp = {
+      id: '__llastudio_launcher__',
+      name: 'LLAStudio Launcher',
+      repoUrl: LAUNCHER_REPO.url,
+      repoOwner: LAUNCHER_REPO.owner,
+      repoName: LAUNCHER_REPO.name,
+      apiReleasesUrl: LAUNCHER_REPO.releasesApiUrl,
+      category: 'Acid',
+      language: 'TypeScript',
+      description: 'Launcher desktop officiel LLAStudio.',
+    };
+
+    (async () => {
+      try {
+        const latest = await fetchRemoteReleaseInfo(launcherApp, settings.githubToken);
+        if (cancelled || !latest) return;
+        if (isUpdateAvailable(APP_VERSION, latest.version)) {
+          setLauncherUpdate(latest);
+        }
+      } catch {
+        // Silently ignore self-update check errors (offline, rate limit, no releases yet)
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [settings.checkLauncherUpdates, settings.githubToken]);
 
   // Periodic check
   useEffect(() => {
@@ -215,10 +266,9 @@ export default function App() {
 
   const handleOpenFolder = async (appId: string) => {
     const st = installs[appId];
-    const ver = st?.activeVersion || st?.installedVersions[st.installedVersions.length - 1];
-    if (!ver) return;
-    const iv = st.installedVersions.find((v) => v.version === ver.version);
-    if (!iv) return;
+    if (!st || st.installedVersions.length === 0) return;
+    const versionName = st.activeVersion || st.installedVersions[st.installedVersions.length - 1].version;
+    const iv = st.installedVersions.find((v) => v.version === versionName) || st.installedVersions[st.installedVersions.length - 1];
     const folder = iv.path.replace(/[/\\][^/\\]+$/, '');
     try {
       await openPath(folder || iv.path);
@@ -286,6 +336,34 @@ export default function App() {
           onViewModeChange={setViewMode}
         />
         <main className="flex-1 overflow-y-auto p-5 grid-bg">
+          {launcherUpdate && !launcherUpdateDismissed && (
+            <div className="mb-4 rounded-lg border border-lemon/40 bg-lemon/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-glowLemon">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-lemon">
+                  Nouvelle version du launcher disponible : v{launcherUpdate.version}
+                </div>
+                <p className="text-xs text-muted mt-0.5">
+                  Version actuelle : v{APP_VERSION}. Vous pouvez télécharger et installer la mise à jour depuis GitHub.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() =>
+                    openExternal(launcherUpdate.htmlUrl || `${LAUNCHER_REPO.url}/releases/latest`)
+                  }
+                  className="px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm hover:brightness-110"
+                >
+                  Télécharger / Voir la release
+                </button>
+                <button
+                  onClick={() => setLauncherUpdateDismissed(true)}
+                  className="px-3 py-2 rounded-md border border-border bg-[#151922] hover:bg-[#1A1F27] text-sm text-muted hover:text-text"
+                >
+                  Plus tard
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex items-end justify-between mb-4 gap-4">
             <div>
               <h1 className="text-xl font-semibold">{sectionTitle[section]}</h1>

@@ -1,11 +1,11 @@
 import React from 'react';
 import {
   Boxes,
+  Citrus,
   Download,
   FlaskConical,
   Github,
   Layers3,
-  Lemon,
   RefreshCw,
   Settings,
   Sprout,
@@ -25,7 +25,7 @@ interface SidebarProps {
 
 const navItems: { id: NavSection; label: string; icon: React.ReactNode; tone?: string }[] = [
   { id: 'applications', label: 'Applications', icon: <Boxes size={18} /> },
-  { id: 'lemon', label: 'Lemon', icon: <Lemon size={18} />, tone: 'text-lemon' },
+  { id: 'lemon', label: 'Lemon', icon: <Citrus size={18} />, tone: 'text-lemon' },
   { id: 'lime', label: 'Lime', icon: <Sprout size={18} />, tone: 'text-lime' },
   { id: 'installs', label: 'Installs', icon: <Download size={18} /> },
   { id: 'releases', label: 'Releases', icon: <Sparkles size={18} /> },
