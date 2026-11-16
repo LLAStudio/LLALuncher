@@ -1,12 +1,16 @@
-import type { SettingsState, UpdateCacheEntry } from '../types';
+import type { LauncherUpdateCache, SettingsState, UpdateCacheEntry } from '../types';
 
 const SETTINGS_KEY = 'llastudio.settings.v1';
 const UPDATE_CACHE_KEY = 'llastudio.updateCache.v1';
+const LAUNCHER_UPDATE_CACHE_KEY = 'llastudio.launcherUpdateCache.v1';
+
+export const LAUNCHER_UPDATE_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 
 export const defaultSettings: SettingsState = {
   githubToken: '',
   autoCheckMinutes: 30,
   checkLauncherUpdates: true,
+  skippedLauncherVersion: '',
 };
 
 export function loadSettings(): SettingsState {
@@ -22,6 +26,8 @@ export function loadSettings(): SettingsState {
         typeof parsed.checkLauncherUpdates === 'boolean'
           ? parsed.checkLauncherUpdates
           : defaultSettings.checkLauncherUpdates,
+      skippedLauncherVersion:
+        typeof parsed.skippedLauncherVersion === 'string' ? parsed.skippedLauncherVersion : '',
     };
   } catch {
     return defaultSettings;
@@ -44,6 +50,30 @@ export function loadUpdateCache(): Record<string, UpdateCacheEntry> {
 
 export function saveUpdateCache(cache: Record<string, UpdateCacheEntry>): void {
   localStorage.setItem(UPDATE_CACHE_KEY, JSON.stringify(cache));
+}
+
+export function loadLauncherUpdateCache(): LauncherUpdateCache | null {
+  try {
+    const raw = localStorage.getItem(LAUNCHER_UPDATE_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as LauncherUpdateCache;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLauncherUpdateCache(cache: LauncherUpdateCache): void {
+  localStorage.setItem(LAUNCHER_UPDATE_CACHE_KEY, JSON.stringify(cache));
+}
+
+export function isLauncherUpdateCacheFresh(
+  cache: LauncherUpdateCache | null,
+  ttlMs: number = LAUNCHER_UPDATE_CACHE_TTL_MS,
+): boolean {
+  if (!cache) return false;
+  const checkedAt = new Date(cache.checkedAt).getTime();
+  if (Number.isNaN(checkedAt)) return false;
+  return Date.now() - checkedAt < ttlMs;
 }
 
 export function formatBytes(bytes?: number): string {

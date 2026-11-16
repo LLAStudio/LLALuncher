@@ -74,4 +74,10 @@ export interface SettingsState {
   githubToken: string;
   autoCheckMinutes: number;
   checkLauncherUpdates: boolean;
+  skippedLauncherVersion: string;
+}
+
+export interface LauncherUpdateCache {
+  checkedAt: string;
+  latest: RemoteReleaseInfo | null;
 }

@@ -3,7 +3,10 @@ import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { AppCard } from './components/AppCard';
 import { AppDetailsModal } from './components/AppDetailsModal';
+import { LauncherUpdateBanner } from './components/LauncherUpdateBanner';
+import { LauncherReleaseNotesModal } from './components/LauncherReleaseNotesModal';
 import { SettingsModal } from './components/SettingsModal';
+import type { LauncherCheckState } from './components/SettingsModal';
 import { CATALOG_APPS } from './data/catalog';
 import { APP_VERSION, LAUNCHER_REPO } from './constants';
 import type {
@@ -16,7 +19,15 @@ import type {
   SortMode,
   ViewMode,
 } from './types';
-import { loadSettings, saveSettings, loadUpdateCache, formatRelativeTime } from './services/storage';
+import {
+  loadSettings,
+  saveSettings,
+  loadUpdateCache,
+  formatRelativeTime,
+  loadLauncherUpdateCache,
+  saveLauncherUpdateCache,
+  isLauncherUpdateCacheFresh,
+} from './services/storage';
 import {
   checkAppUpdate,
   fetchRemoteReleaseInfo,
@@ -37,6 +48,18 @@ import {
 } from './lib/desktop';
 
 const emptyInstall: AppInstallState = { installedVersions: [], activeVersion: null };
+
+const LAUNCHER_APP: CatalogApp = {
+  id: '__llastudio_launcher__',
+  name: 'LLAStudio Launcher',
+  repoUrl: LAUNCHER_REPO.url,
+  repoOwner: LAUNCHER_REPO.owner,
+  repoName: LAUNCHER_REPO.name,
+  apiReleasesUrl: LAUNCHER_REPO.releasesApiUrl,
+  category: 'Acid',
+  language: 'TypeScript',
+  description: 'Launcher desktop officiel LLAStudio.',
+};
 
 function matchesSection(app: AppRuntimeState, section: NavSection): boolean {
   if (section === 'applications') return true;
@@ -61,7 +84,8 @@ export default function App() {
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [globalChecking, setGlobalChecking] = useState(false);
   const [launcherUpdate, setLauncherUpdate] = useState<RemoteReleaseInfo | null>(null);
-  const [launcherUpdateDismissed, setLauncherUpdateDismissed] = useState(false);
+  const [launcherUpdateDetailsOpen, setLauncherUpdateDetailsOpen] = useState(false);
+  const [launcherCheckState, setLauncherCheckState] = useState<LauncherCheckState>('idle');
 
   const refreshInstalls = useCallback(async () => {
     try {
@@ -141,38 +165,67 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Startup self-update check for the launcher itself
-  useEffect(() => {
-    if (!settings.checkLauncherUpdates) return;
-    let cancelled = false;
-    const launcherApp: CatalogApp = {
-      id: '__llastudio_launcher__',
-      name: 'LLAStudio Launcher',
-      repoUrl: LAUNCHER_REPO.url,
-      repoOwner: LAUNCHER_REPO.owner,
-      repoName: LAUNCHER_REPO.name,
-      apiReleasesUrl: LAUNCHER_REPO.releasesApiUrl,
-      category: 'Acid',
-      language: 'TypeScript',
-      description: 'Launcher desktop officiel LLAStudio.',
-    };
+  const checkLauncherUpdate = useCallback(
+    async (manual = false) => {
+      if (!manual && !settings.checkLauncherUpdates) return;
 
-    (async () => {
+      const cached = loadLauncherUpdateCache();
+      if (!manual && isLauncherUpdateCacheFresh(cached)) {
+        if (cached?.latest && isUpdateAvailable(APP_VERSION, cached.latest.version)) {
+          setLauncherUpdate(cached.latest);
+        } else {
+          setLauncherUpdate(null);
+        }
+        return;
+      }
+
+      if (manual) setLauncherCheckState('checking');
+
       try {
-        const latest = await fetchRemoteReleaseInfo(launcherApp, settings.githubToken);
-        if (cancelled || !latest) return;
-        if (isUpdateAvailable(APP_VERSION, latest.version)) {
+        const latest = await fetchRemoteReleaseInfo(LAUNCHER_APP, settings.githubToken);
+        saveLauncherUpdateCache({ checkedAt: new Date().toISOString(), latest });
+
+        if (latest && isUpdateAvailable(APP_VERSION, latest.version)) {
           setLauncherUpdate(latest);
+          setLauncherCheckState('update-available');
+          setSettings((prev) => {
+            if (prev.skippedLauncherVersion !== latest.version) return prev;
+            const next = { ...prev, skippedLauncherVersion: '' };
+            saveSettings(next);
+            return next;
+          });
+        } else {
+          setLauncherUpdate(null);
+          setLauncherCheckState('up-to-date');
         }
       } catch {
-        // Silently ignore self-update check errors (offline, rate limit, no releases yet)
+        if (manual) setLauncherCheckState('error');
       }
-    })();
+    },
+    [settings.checkLauncherUpdates, settings.githubToken],
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [settings.checkLauncherUpdates, settings.githubToken]);
+  // Startup self-update check for the launcher itself (cached for 6h)
+  useEffect(() => {
+    if (settings.checkLauncherUpdates) {
+      void checkLauncherUpdate(false);
+    }
+  }, [checkLauncherUpdate, settings.checkLauncherUpdates]);
+
+  const dismissLauncherUpdate = () => {
+    if (!launcherUpdate) return;
+    const next = { ...settings, skippedLauncherVersion: launcherUpdate.version };
+    setSettings(next);
+    saveSettings(next);
+    setLauncherUpdateDetailsOpen(false);
+  };
+
+  const handleLauncherDownload = () => {
+    if (!launcherUpdate) return;
+    const asset = pickBestAsset(launcherUpdate.assets);
+    const url = asset?.browserDownloadUrl || launcherUpdate.htmlUrl || `${LAUNCHER_REPO.url}/releases/latest`;
+    void openExternal(url);
+  };
 
   // Periodic check
   useEffect(() => {
@@ -233,6 +286,7 @@ export default function App() {
   const updatesCount = runtimeStates.filter((s) => s.updateAvailable).length;
   const lastCheckedAt = getLastCheckedAt();
   const selectedState = selectedAppId ? runtimeStates.find((s) => s.app.id === selectedAppId) || null : null;
+  const launcherUpdateAsset = launcherUpdate ? pickBestAsset(launcherUpdate.assets) : undefined;
 
   const handleInstall = async (appId: string, version: string) => {
     const state = runtimeStates.find((s) => s.app.id === appId);
@@ -336,33 +390,15 @@ export default function App() {
           onViewModeChange={setViewMode}
         />
         <main className="flex-1 overflow-y-auto p-5 grid-bg">
-          {launcherUpdate && !launcherUpdateDismissed && (
-            <div className="mb-4 rounded-lg border border-lemon/40 bg-lemon/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-glowLemon">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-lemon">
-                  Nouvelle version du launcher disponible : v{launcherUpdate.version}
-                </div>
-                <p className="text-xs text-muted mt-0.5">
-                  Version actuelle : v{APP_VERSION}. Vous pouvez télécharger et installer la mise à jour depuis GitHub.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() =>
-                    openExternal(launcherUpdate.htmlUrl || `${LAUNCHER_REPO.url}/releases/latest`)
-                  }
-                  className="px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm hover:brightness-110"
-                >
-                  Télécharger / Voir la release
-                </button>
-                <button
-                  onClick={() => setLauncherUpdateDismissed(true)}
-                  className="px-3 py-2 rounded-md border border-border bg-[#151922] hover:bg-[#1A1F27] text-sm text-muted hover:text-text"
-                >
-                  Plus tard
-                </button>
-              </div>
-            </div>
+          {launcherUpdate && settings.skippedLauncherVersion !== launcherUpdate.version && (
+            <LauncherUpdateBanner
+              update={launcherUpdate}
+              currentVersion={APP_VERSION}
+              directDownload={!!launcherUpdateAsset?.browserDownloadUrl}
+              onDismiss={dismissLauncherUpdate}
+              onDetails={() => setLauncherUpdateDetailsOpen(true)}
+              onDownload={handleLauncherDownload}
+            />
           )}
           <div className="flex items-end justify-between mb-4 gap-4">
             <div>
@@ -434,6 +470,16 @@ export default function App() {
         />
       )}
 
+      {launcherUpdate && launcherUpdateDetailsOpen && (
+        <LauncherReleaseNotesModal
+          update={launcherUpdate}
+          currentVersion={APP_VERSION}
+          directDownload={!!launcherUpdateAsset?.browserDownloadUrl}
+          onClose={() => setLauncherUpdateDetailsOpen(false)}
+          onDownload={handleLauncherDownload}
+        />
+      )}
+
       {settingsOpen && (
         <SettingsModal
           settings={settings}
@@ -443,6 +489,8 @@ export default function App() {
             saveSettings(s);
             setSettingsOpen(false);
           }}
+          onCheckLauncherUpdate={() => void checkLauncherUpdate(true)}
+          launcherCheckState={launcherCheckState}
         />
       )}
     </div>

@@ -1,39 +1,72 @@
 import React, { useState } from 'react';
-import { KeyRound, Save, X } from 'lucide-react';
+import { CheckCircle2, KeyRound, RefreshCw, Save, TriangleAlert, X } from 'lucide-react';
 import type { SettingsState } from '../types';
+
+export type LauncherCheckState = 'idle' | 'checking' | 'up-to-date' | 'update-available' | 'error';
 
 interface Props {
   settings: SettingsState;
   onClose: () => void;
   onSave: (settings: SettingsState) => void;
+  onCheckLauncherUpdate: () => void;
+  launcherCheckState: LauncherCheckState;
 }
 
-export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) => {
+const statusLabel: Record<LauncherCheckState, string | null> = {
+  idle: null,
+  checking: 'Vérification des releases GitHub…',
+  'up-to-date': 'Le launcher est à jour.',
+  'update-available': 'Nouvelle version détectée.',
+  error: 'Vérification impossible (réseau ou limite GitHub).',
+};
+
+export const SettingsModal: React.FC<Props> = ({
+  settings,
+  onClose,
+  onSave,
+  onCheckLauncherUpdate,
+  launcherCheckState,
+}) => {
   const [token, setToken] = useState(settings.githubToken);
   const [minutes, setMinutes] = useState(settings.autoCheckMinutes);
   const [checkLauncherUpdates, setCheckLauncherUpdates] = useState(settings.checkLauncherUpdates);
+  const label = statusLabel[launcherCheckState];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
-      <div className="w-full max-w-lg bg-card border border-border rounded-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-[#101319]">
-          <h2 className="font-semibold flex items-center gap-2"><KeyRound size={18} className="text-lime" /> Paramètres</h2>
-          <button onClick={onClose} className="p-2 rounded-md border border-border hover:bg-[#1A1F27] text-muted hover:text-text"><X size={16} /></button>
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border bg-[#101319] px-5 py-4">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <KeyRound size={18} className="text-lime" /> Paramètres
+          </h2>
+          <button
+            onClick={onClose}
+            className="rounded-md border border-border p-2 text-muted hover:bg-[#1A1F27] hover:text-text"
+          >
+            <X size={16} />
+          </button>
         </div>
-        <div className="p-5 space-y-5">
+
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto p-5">
           <div>
-            <label className="block text-sm font-medium mb-1">GitHub Personal Access Token (optionnel)</label>
-            <p className="text-xs text-muted mb-2">Permet d'augmenter la limite de l'API GitHub (60 req/h sans token). Le token est stocké localement sur cet appareil.</p>
+            <label className="mb-1 block text-sm font-medium">GitHub Personal Access Token (optionnel)</label>
+            <p className="mb-2 text-xs text-muted">
+              Permet d'augmenter la limite de l'API GitHub (60 req/h sans token). Le token est stocké localement sur cet appareil.
+            </p>
             <input
               type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="ghp_..."
-              className="w-full bg-[#0F1115] border border-border rounded-md px-3 py-2 text-sm outline-none focus:border-lime/40 font-mono"
+              className="w-full rounded-md border border-border bg-[#0F1115] px-3 py-2 font-mono text-sm outline-none focus:border-lime/40"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-medium mb-1">Vérification automatique des mises à jour</label>
+            <label className="mb-1 block text-sm font-medium">Vérification automatique des mises à jour</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
@@ -41,13 +74,14 @@ export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) =>
                 max={720}
                 value={minutes}
                 onChange={(e) => setMinutes(Math.max(5, Number(e.target.value) || 30))}
-                className="w-28 bg-[#0F1115] border border-border rounded-md px-3 py-2 text-sm outline-none focus:border-lime/40"
+                className="w-28 rounded-md border border-border bg-[#0F1115] px-3 py-2 text-sm outline-none focus:border-lime/40"
               />
               <span className="text-sm text-muted">minutes (min. 5)</span>
             </div>
           </div>
+
           <div className="rounded-md border border-border bg-[#0F1115] p-3">
-            <label className="flex items-start gap-3 cursor-pointer">
+            <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={checkLauncherUpdates}
@@ -56,13 +90,49 @@ export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) =>
               />
               <div>
                 <div className="text-sm font-medium">Vérifier les mises à jour du launcher au démarrage</div>
-                <p className="text-xs text-muted mt-1">Affiche un message si une nouvelle release de LLAStudio Launcher est disponible sur GitHub.</p>
+                <p className="mt-1 text-xs text-muted">
+                  Affiche un message si une nouvelle release de LLAStudio Launcher est disponible sur GitHub.
+                </p>
               </div>
             </label>
+
+            <button
+              onClick={onCheckLauncherUpdate}
+              disabled={launcherCheckState === 'checking'}
+              className="mt-3 inline-flex items-center gap-2 rounded-md border border-border bg-[#151922] px-3 py-2 text-xs font-medium transition hover:border-lime/40 hover:text-lime disabled:opacity-60"
+            >
+              <RefreshCw size={14} className={launcherCheckState === 'checking' ? 'animate-spin' : ''} />
+              Vérifier maintenant
+            </button>
+
+            {label && (
+              <div
+                className={`mt-2 flex items-center gap-1.5 font-mono text-[11px] ${
+                  launcherCheckState === 'error'
+                    ? 'text-red-300'
+                    : launcherCheckState === 'update-available'
+                      ? 'text-lemon'
+                      : 'text-muted'
+                }`}
+              >
+                {launcherCheckState === 'error' && <TriangleAlert size={12} />}
+                {(launcherCheckState === 'up-to-date' || launcherCheckState === 'update-available') && (
+                  <CheckCircle2 size={12} />
+                )}
+                {launcherCheckState === 'checking' && <RefreshCw size={12} className="animate-spin" />}
+                <span>{label}</span>
+              </div>
+            )}
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-border flex justify-end gap-2 bg-[#101319]">
-          <button onClick={onClose} className="px-3 py-2 rounded-md border border-border hover:bg-[#1A1F27] text-sm">Annuler</button>
+
+        <div className="flex justify-end gap-2 border-t border-border bg-[#101319] px-5 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-md border border-border px-3 py-2 text-sm hover:bg-[#1A1F27]"
+          >
+            Annuler
+          </button>
           <button
             onClick={() =>
               onSave({
@@ -72,7 +142,7 @@ export const SettingsModal: React.FC<Props> = ({ settings, onClose, onSave }) =>
                 checkLauncherUpdates,
               })
             }
-            className="px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm inline-flex items-center gap-2 hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-md bg-acid px-3 py-2 text-sm font-semibold text-black hover:brightness-110"
           >
             <Save size={15} /> Enregistrer
           </button>

@@ -1,6 +1,6 @@
 [package]
 name = "llastudio-launcher"
-version = "0.1.0"
+version = "0.2.0"
 description = "Official desktop launcher for LLAStudio (LemonLimeAcid)"
 authors = ["LLAStudio"]
 edition = "2021"

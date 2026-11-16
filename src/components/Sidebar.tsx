@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { NavSection } from '../types';
+import { APP_VERSION } from '../constants';
 import { formatRelativeTime } from '../services/storage';
 
 interface SidebarProps {
@@ -83,6 +84,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="mt-1 text-[11px] font-mono text-muted">
             {lastCheckedAt ? `CHECKED ${formatRelativeTime(lastCheckedAt).toUpperCase()} USING GITHUB API` : 'NOT CHECKED YET'}
+          </div>
+          <div className="mt-2 flex items-center justify-between border-t border-border/60 pt-2 font-mono text-[10px] text-muted">
+            <span>LAUNCHER</span>
+            <span>v{APP_VERSION}</span>
           </div>
         </div>
         <button
