@@ -36,7 +36,7 @@ export const LauncherUpdateBanner: React.FC<Props> = ({
     <div className="relative mb-4 overflow-hidden rounded-lg border border-lemon/40 bg-[#141610] shadow-glowLemon">
       <div className="absolute inset-y-0 left-0 w-1 bg-acid" />
       <div className="flex flex-col gap-3 py-3 pl-5 pr-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-acid text-black shadow-glowLemon">
             <Sparkles size={17} />
           </div>

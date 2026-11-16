@@ -99,11 +99,11 @@ export const AppCard: React.FC<AppCardProps> = ({
 
     if (updateAvailable && latestVersion) {
       return (
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <span className="inline-flex items-center px-2 py-1 rounded border border-lemon/50 text-lemon text-[10px] font-mono tracking-wide w-fit">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+          <span className="inline-flex w-fit shrink-0 items-center whitespace-nowrap rounded border border-lemon/50 px-2 py-1 font-mono text-[10px] tracking-wide text-lemon">
             UPDATE AVAILABLE
           </span>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2 sm:flex-1 sm:justify-end">
             <button
               onClick={onOpenApp}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-[#151922] hover:border-lime/40 hover:text-lime text-sm"

@@ -13,6 +13,24 @@ Launcher desktop officiel **LLAStudio** construit avec **Tauri v2 + React + Type
   - Acid : `linear-gradient(135deg, #E5FF00 0%, #39FF14 100%)` (logo, éléments mis en avant)
   - Texte : `#F3F4F6` / secondaire `#8B949E`
 
+## Aperçu
+
+Vue grille (thème Lemon Lime Acid, badges de mise à jour et bannière de release du launcher) :
+
+![Vue grille du launcher LLAStudio](docs/screenshots/launcher-grid.png)
+
+<p align="center">
+  <img src="docs/screenshots/launcher-list.png" alt="Vue liste" width="49%" />
+  <img src="docs/screenshots/launcher-settings.png" alt="Paramètres" width="49%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/launcher-details.png" alt="Détails d'une application" width="49%" />
+  <img src="docs/screenshots/launcher-update-notes.png" alt="Notes de version du launcher" width="49%" />
+</p>
+
+> Captures réalisées sur la version web de développement avec des données de démonstration (releases et installations simulées) ; l'application desktop Tauri utilise les mêmes composants.
+
 ## Architecture des fichiers
 
 ```text
@@ -27,6 +45,7 @@ Launcher desktop officiel **LLAStudio** construit avec **Tauri v2 + React + Type
 ├─ src/
 │  ├─ main.tsx                     # Entrée React
 │  ├─ App.tsx                      # Orchestration état/UI, checks périodiques, actions install/update
+│  ├─ constants.ts                 # Version du launcher + repo GitHub LLALuncher (self-update)
 │  ├─ index.css                    # Tailwind + styles globaux (grid, scrollbar, markdown)
 │  ├─ types.ts                     # Types catalogue, releases, installs, UI, settings
 │  ├─ data/
@@ -41,7 +60,9 @@ Launcher desktop officiel **LLAStudio** construit avec **Tauri v2 + React + Type
 │     ├─ Topbar.tsx                # UPDATE ALL, tri, recherche, switch grille/liste
 │     ├─ AppCard.tsx               # Carte app (header version, GitHub, actions, progression install)
 │     ├─ AppDetailsModal.tsx        # Modale détails (notes Markdown, versions installées, assets, actions)
-│     └─ SettingsModal.tsx         # Paramètres (GitHub PAT, intervalle de vérification)
+│     ├─ LauncherUpdateBanner.tsx  # Bannière de nouvelle release du launcher (notes + download OS)
+│     ├─ LauncherReleaseNotesModal.tsx # Modale changelog Markdown de la release du launcher
+│     └─ SettingsModal.tsx         # Paramètres (GitHub PAT, intervalle, check manuel du launcher)
 └─ src-tauri/
    ├─ Cargo.toml
    ├─ build.rs
@@ -64,6 +85,7 @@ Launcher desktop officiel **LLAStudio** construit avec **Tauri v2 + React + Type
   - Métadonnées (last updated, release size, langage)
   - États : à jour (`OPEN` + menu), mise à jour (`UPDATE AVAILABLE` + `OPEN` + `UPDATE TO`), non installée (`INSTALL` + barre de progression)
 - **Modale de détails** : notes de version Markdown depuis GitHub, liste des assets, sélecteur de versions installées (active), actions ouvrir/dossier/désinstaller, lien repo.
+- **Mise à jour du launcher** : bannière discrète au démarrage avec version disponible, résumé des notes, téléchargement OS-aware, report mémorisé par version et vérification manuelle dans les Paramètres.
 
 ### Catalogue officiel LLAStudio
 1. **PipeCraft** (Lime, TypeScript) — `https://github.com/LLAStudio/PipeCraft`
@@ -84,6 +106,14 @@ Launcher desktop officiel **LLAStudio** construit avec **Tauri v2 + React + Type
 - **Assets** : extraction des assets de release, sélection automatique selon l'OS (`.exe/.msi` Windows, `.dmg` macOS, `.AppImage/.deb` Linux), affichage de la taille.
 - **Cache & sync** : cache local (`localStorage`) avec horodatage par app (`CHECKED ... USING GITHUB API`), réutilisé en cas d'erreur réseau/rate-limit.
 - **Rate-limit GitHub** : champ `GitHub Personal Access Token` dans les Paramètres (envoyé en `Authorization: Bearer ...`).
+
+### Mise à jour du launcher (self-update)
+- **Vérification au démarrage** des releases de `LLAStudio/LLALuncher` (release → tag → commit de la branche par défaut), avec cache local de **6 heures** pour limiter les appels à l'API GitHub.
+- **Bannière de notification** : version disponible vs version actuelle, résumé des notes, date de publication, bouton `Notes` et action `Mettre à jour` / `Voir la release`.
+- **Téléchargement direct** : sélection de l'asset adapté à l'OS via `pickBestAsset` (`.AppImage/.deb` Linux, `.exe/.msi` Windows, `.dmg` macOS) si présent dans la release, sinon ouverture de la page GitHub.
+- **Notes de version** : modale dédiée avec rendu Markdown complet du changelog GitHub et lien vers la release.
+- **Report mémorisé** : le bouton `Plus tard` enregistre la version ignorée (`skippedLauncherVersion`) pour ne plus la rappeler, tout en laissant apparaître les futures releases.
+- **Vérification manuelle** : bouton `Vérifier maintenant` dans les Paramètres avec statut (à jour / nouvelle version / erreur réseau ou rate-limit).
 
 ### Backend Tauri (`src-tauri/src/lib.rs`)
 Commandes natives exposées au frontend :

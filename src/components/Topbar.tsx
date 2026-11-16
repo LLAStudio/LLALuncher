@@ -25,7 +25,7 @@ export const Topbar: React.FC<TopbarProps> = ({
 }) => {
   return (
     <div className="h-16 border-b border-border bg-[#0E1014]/80 backdrop-blur flex items-center justify-between px-5 gap-4">
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         {updatesCount > 0 && (
           <button
             onClick={onUpdateAll}
@@ -35,7 +35,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             <RefreshCcw size={16} /> UPDATE ALL ({updatesCount})
           </button>
         )}
-        <div className="relative w-[320px] max-w-full">
+        <div className="relative w-full min-w-[160px] max-w-[320px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             value={search}
@@ -46,7 +46,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-border bg-[#121418]">
           <ArrowDownUp size={14} className="text-muted" />
           <select
