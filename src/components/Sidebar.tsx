@@ -44,11 +44,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-[240px] shrink-0 h-full bg-card border-r border-border flex flex-col">
       <div className="px-5 py-5 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-md bg-acid flex items-center justify-center text-black font-bold shadow-glowLime">
+          <div className="w-9 h-9 rounded-md bg-acid flex items-center justify-center text-black font-bold">
             <Layers3 size={18} />
           </div>
           <div>
-            <div className="font-semibold tracking-wide acid-text leading-tight">LLAStudio</div>
+            <div className="font-semibold tracking-wide text-text leading-tight">LLAStudio</div>
             <div className="text-[10px] font-mono tracking-[0.2em] text-muted mt-0.5">LEMON LIME ACID</div>
           </div>
         </div>
@@ -61,12 +61,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => onChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md border text-sm transition-all ${
+              className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-md border text-sm transition-all ${
                 isActive
-                  ? 'bg-[#171A20] border-[#2A303B] text-text shadow-inner'
+                  ? 'bg-[#171A20] border-[#2A303B] text-text'
                   : 'border-transparent text-muted hover:text-text hover:bg-[#151922] hover:border-[#232938]'
               }`}
             >
+              {isActive && <span className="absolute inset-y-1 left-0 w-0.5 bg-lime" />}
               <span className={item.tone || (isActive ? 'text-lime' : 'text-muted')}>{item.icon}</span>
               <span className="font-medium">{item.label}</span>
               {item.id === 'lemon' && <FlaskConical size={14} className="ml-auto text-lemon/60" />}

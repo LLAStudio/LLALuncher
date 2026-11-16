@@ -19,9 +19,16 @@ export default {
       backgroundImage: {
         acid: 'linear-gradient(135deg, #E5FF00 0%, #39FF14 100%)',
       },
-      boxShadow: {
-        glowLemon: '0 0 0 1px rgba(229,255,0,0.25), 0 0 20px rgba(229,255,0,0.08)',
-        glowLime: '0 0 0 1px rgba(57,255,20,0.25), 0 0 20px rgba(57,255,20,0.08)',
+      borderRadius: {
+        none: '0px',
+        sm: '1px',
+        DEFAULT: '1px',
+        md: '1px',
+        lg: '0px',
+        xl: '0px',
+        '2xl': '0px',
+        '3xl': '0px',
+        full: '9999px',
       },
     },
   },

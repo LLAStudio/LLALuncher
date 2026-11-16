@@ -27,7 +27,7 @@ interface AppCardProps {
 const tagStyles: Record<string, string> = {
   Lemon: 'text-lemon border-lemon/30 bg-lemon/5',
   Lime: 'text-lime border-lime/30 bg-lime/5',
-  Acid: 'text-black border-transparent bg-acid',
+  Acid: 'text-black border-transparent bg-lime',
 };
 
 export const AppCard: React.FC<AppCardProps> = ({
@@ -77,8 +77,8 @@ export const AppCard: React.FC<AppCardProps> = ({
             <span>{updateAvailable ? 'Updating' : 'Installing'} v{download.targetVersion || latestVersion}</span>
             <span>{progress.toFixed(0)}%</span>
           </div>
-          <div className="h-2 rounded-full bg-[#0B0C0E] border border-border overflow-hidden">
-            <div className="h-full bg-acid transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-2 rounded-none bg-[#0B0C0E] border border-border overflow-hidden">
+            <div className="h-full bg-lime transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
       );
@@ -113,7 +113,7 @@ export const AppCard: React.FC<AppCardProps> = ({
             <button
               onClick={() => onUpdate(latestVersion)}
               disabled={!bestAsset}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm hover:brightness-110 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-lemon text-black font-semibold text-sm hover:brightness-110 disabled:opacity-50"
             >
               <Download size={14} /> UPDATE TO v{latestVersion}
             </button>
@@ -140,7 +140,7 @@ export const AppCard: React.FC<AppCardProps> = ({
           </button>
           {menuOpen && (
             <div
-              className="absolute right-0 bottom-full mb-2 w-52 rounded-md border border-border bg-[#121418] shadow-xl z-20 overflow-hidden"
+              className="absolute right-0 bottom-full mb-2 w-52 rounded-md border border-border bg-[#121418] z-20 overflow-hidden"
               onMouseLeave={() => setMenuOpen(false)}
             >
               <button onClick={() => { setMenuOpen(false); onOpenDetails(); }} className="w-full px-3 py-2 text-left text-sm hover:bg-[#1A1F27] flex items-center gap-2">
@@ -189,7 +189,7 @@ export const AppCard: React.FC<AppCardProps> = ({
   }
 
   return (
-    <div className="group border border-border bg-card rounded-lg p-4 hover:border-[#2f3542] hover:shadow-[0_0_0_1px_rgba(57,255,20,0.06)] transition flex flex-col min-h-[250px]">
+    <div className="group border border-border bg-card rounded-lg p-4 hover:border-[#3A4150] transition flex flex-col min-h-[250px]">
       <div className="flex items-start justify-between gap-2 mb-3">
         {headerVersion}
         <button onClick={onOpenRepo} className="font-mono text-[11px] text-muted hover:text-lime inline-flex items-center gap-1 shrink-0">

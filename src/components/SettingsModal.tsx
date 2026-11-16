@@ -142,7 +142,7 @@ export const SettingsModal: React.FC<Props> = ({
                 checkLauncherUpdates,
               })
             }
-            className="inline-flex items-center gap-2 rounded-md bg-acid px-3 py-2 text-sm font-semibold text-black hover:brightness-110"
+            className="inline-flex items-center gap-2 rounded-md bg-lime px-3 py-2 text-sm font-semibold text-black hover:brightness-110"
           >
             <Save size={15} /> Enregistrer
           </button>

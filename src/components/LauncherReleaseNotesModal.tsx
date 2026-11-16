@@ -23,7 +23,7 @@ export const LauncherReleaseNotesModal: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
       <div
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-border bg-[#101319] px-5 py-4">
@@ -81,7 +81,7 @@ export const LauncherReleaseNotesModal: React.FC<Props> = ({
             </button>
             <button
               onClick={onDownload}
-              className="inline-flex items-center gap-2 rounded-md bg-acid px-3 py-2 text-sm font-semibold text-black transition hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-md bg-lemon px-3 py-2 text-sm font-semibold text-black transition hover:brightness-110"
             >
               {directDownload ? <Download size={15} /> : <ArrowUpRight size={15} />}
               {directDownload ? 'Télécharger la mise à jour' : 'Voir la release'}

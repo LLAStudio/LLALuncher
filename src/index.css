@@ -16,6 +16,11 @@ html, body, #root {
   box-sizing: border-box;
 }
 
+select option {
+  background-color: #121418;
+  color: #F3F4F6;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -25,7 +30,7 @@ html, body, #root {
 }
 ::-webkit-scrollbar-thumb {
   background: #22262E;
-  border-radius: 999px;
+  border-radius: 0;
   border: 2px solid #0B0C0E;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -40,8 +45,8 @@ html, body, #root {
 }
 
 .grid-bg {
-  background-image: linear-gradient(to right, rgba(34,38,46,0.25) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(34,38,46,0.25) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgba(34,38,46,0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34,38,46,0.18) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -49,6 +54,6 @@ html, body, #root {
 .prose-invert p, .prose-invert li { color: #c9d1d9; }
 .prose-invert a { color: #39FF14; }
 .prose-invert code { color: #E5FF00; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
-.prose-invert pre { background: #0B0C0E; border: 1px solid #22262E; padding: 0.75rem; border-radius: 0.5rem; overflow: auto; }
+.prose-invert pre { background: #0B0C0E; border: 1px solid #22262E; padding: 0.75rem; border-radius: 0; overflow: auto; }
 .prose-invert ul { list-style: disc; padding-left: 1.25rem; }
 .prose-invert ol { list-style: decimal; padding-left: 1.25rem; }

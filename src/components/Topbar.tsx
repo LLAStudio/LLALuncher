@@ -24,12 +24,12 @@ export const Topbar: React.FC<TopbarProps> = ({
   onViewModeChange,
 }) => {
   return (
-    <div className="h-16 border-b border-border bg-[#0E1014]/80 backdrop-blur flex items-center justify-between px-5 gap-4">
+    <div className="h-16 border-b border-border bg-[#0E1014] flex items-center justify-between px-5 gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {updatesCount > 0 && (
           <button
             onClick={onUpdateAll}
-            className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-md bg-acid text-black font-semibold text-sm hover:brightness-110 transition shadow-glowLime"
+            className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-md bg-lime text-black font-semibold text-sm hover:brightness-110 transition"
             title="Update all applications with available updates"
           >
             <RefreshCcw size={16} /> UPDATE ALL ({updatesCount})
@@ -41,7 +41,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search apps..."
-            className="w-full bg-[#121418] border border-border rounded-md pl-9 pr-3 py-2 text-sm outline-none focus:border-lime/40 focus:shadow-glowLime placeholder:text-muted/70"
+            className="w-full bg-[#121418] border border-border rounded-md pl-9 pr-3 py-2 text-sm outline-none focus:border-lime/50 placeholder:text-muted/70"
           />
         </div>
       </div>
@@ -52,7 +52,7 @@ export const Topbar: React.FC<TopbarProps> = ({
           <select
             value={sortMode}
             onChange={(e) => onSortChange(e.target.value as SortMode)}
-            className="bg-transparent text-sm outline-none text-text pr-1 cursor-pointer"
+            className="bg-[#121418] text-sm outline-none text-text pr-1 cursor-pointer"
           >
             <option value="name">Name A-Z</option>
             <option value="recently-updated">Recently Updated</option>
